@@ -16,7 +16,7 @@ To generate data for testing:
 $ npm run generate -- 1000
 ```
 This will create 1000 index records and put them in a 'widget' index that will the following attributes:
-```json
+```
 {
   name: "Financial Toast", // random words
   color: "blue", // one of ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'brown', 'black']
