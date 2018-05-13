@@ -1,0 +1,17 @@
+{
+  "name": "rxjs-elasticsearch",
+  "version": "0.0.1",
+  "description": "Stream all results from elasticsearch using RXJS and express",
+  "author": "Dan",
+  "dependencies": {
+    "elasticsearch": "^14.2.2",
+    "express": "^4.16.3",
+    "faker": "^4.1.0",
+    "rxjs": "^6.1.0",
+    "rxjs-compat": "^6.1.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "generate": "node generate-records.js"
+  }
+}

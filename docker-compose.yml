@@ -1,0 +1,9 @@
+version: "3.6"
+services:
+  elasticsearch:
+    image: elasticsearch:latest
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - "discovery.type=single-node"
