@@ -1,6 +1,10 @@
 # rxjs-elasticsearch
 
-This project shows how to use rxjs to stream all elasticsearch results using express js.
+This project shows how to use RxJS to stream all elasticsearch results using express.
+
+[RxJS](http://reactivex.io/rxjs/) JS reactive stream framework
+
+[Express](https://expressjs.com/) Node js web framework
 
 # Running Locally
 
@@ -15,7 +19,7 @@ To generate data for testing:
 ```
 $ npm run generate -- 1000
 ```
-This will create 1000 index records and put them in a 'widget' index that will the following attributes:
+This will create 1000 index records and put them in a 'widget' index and has the following attributes:
 ```
 {
   name: "Financial Toast", // random words
