@@ -1,25 +1,31 @@
-const client = require('./rx--es-client')();
+const client = require('./rx-es-client')();
 const rx = require('rxjs/Rx');
 
+const writeToRes = res => ({
+    next: x => res.write(x),
+    error: err => console.error(err),
+    complete: () => res.end()
+});
+
+const emitComma = observable =>
+    observable
+        .mapTo(',')
+        .skipLast(1)
+        .concat(rx.Observable.of(''));
+
 module.exports = (req, res) => {
-    console.log(req.query.q);
-    const subject = new rx.Subject();
-    subject.skip(1).subscribe(() => res.write(','));
-    subject.subscribe(searchRes => {
-        const batchResults = searchRes.hits.hits;
-        res.write(batchResults.map(match => JSON.stringify(match._source)).join());
-    });
-
-    //const search = scroll();
-
-    const observable = client.streamAll({
+    let results = client.streamAll({
         index: 'widget',
         q: req.query.q
-    }).finally(() => {
-        res.write(']');
-        res.end();
-    });
+    }).map(JSON.stringify);
 
-    res.write('[');
-    observable.subscribe(subject);
+    if (req.query.size) {
+        results = results.take(req.query.size);
+    }
+
+    const response = rx.Observable.of('[')
+        .concat(results.zip(emitComma(results), (result, postix) => result.concat(postix)))
+        .concat(rx.Observable.of(']'));
+
+    response.subscribe(writeToRes(res));
 };
