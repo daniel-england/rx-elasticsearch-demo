@@ -1,17 +1,21 @@
 const client = require('./rx-es-client')();
 const rx = require('rxjs/Rx');
 
-const writeToRes = res => ({
-    next: x => res.write(x),
-    error: err => console.error(err),
-    complete: () => res.end()
-});
+const writeToRes = res => {
+    const subject = new rx.Subject();
 
-const emitComma = observable =>
-    observable
-        .mapTo(',')
-        .skipLast(1)
-        .concat(rx.Observable.of(''));
+    subject.skip(1).subscribe(() => res.write(','));
+
+    subject.startWith('[')
+        .finally(() => {
+            res.write(']');
+            res.end();
+        })
+        .subscribe(x => res.write(x));
+
+    return subject;
+};
+
 
 module.exports = (req, res) => {
     let results = client.streamAll({
@@ -23,9 +27,5 @@ module.exports = (req, res) => {
         results = results.take(req.query.size);
     }
 
-    const response = rx.Observable.of('[')
-        .concat(results.zip(emitComma(results), (result, postix) => result.concat(postix)))
-        .concat(rx.Observable.of(']'));
-
-    response.subscribe(writeToRes(res));
+    results.subscribe(writeToRes(res));
 };
