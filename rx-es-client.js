@@ -1,6 +1,9 @@
 const elasticsearch = require('elasticsearch');
 const rx = require('rxjs/Rx');
 
+const bulkSize = 50;
+const bulksPerSecond = 25;
+
 const defaultClient = new elasticsearch.Client({
     host: 'localhost:9200',
     log: 'warning'
@@ -52,12 +55,36 @@ const streamAll = client => searchBody => {
     });
 };
 
+const bulkUpdate = client => observable => {
+    return observable
+        .bufferCount(bulkSize)
+        .concatMap(records => rx.Observable.timer(1000/bulksPerSecond).map(() => records))
+        .mergeMap(records =>
+            rx.Observable.defer(() => {
+                const body = [];
+
+                records.forEach(record => {
+                    body.push({index: {_index: record._index, _type: record._type, _id: record._id}});
+                    body.push(record._source);
+                });
+
+                return client.bulk({body});
+            }).do(results => {
+                if (results.errors) {
+                    console.error(`bulk had errors: ${records[0]._id}`);
+                    throw 'Bulk had errors';
+                }
+            }).retryWhen(errors => errors.delay(5000).take(5).concat(rx.Observable.throwError('Failed to retry')))
+        );
+};
+
 module.exports = (client) => {
     const _client = client || defaultClient;
 
     const module = {};
 
     module.streamAll = streamAll(_client);
+    module.bulkUpdate = bulkUpdate(_client);
 
     return module;
 };
